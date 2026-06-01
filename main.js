@@ -156,41 +156,26 @@ const simpleTexts = {
     ]
 };
 
-// --- УМНЫЙ ЗАПУСК С СКРИПТОМ ЯНДЕКСА ---
+// --- АВТОМАТИЧЕСКИЙ ЗАПУСК ИГРЫ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
 window.onload = function() {
-    console.log("Проверка окружения...");
-    if (typeof YaGames !== 'undefined') {
-        YaGames.init().then(initYsdk => {
-            console.log("Яндекс SDK успешно подключен!");
-            ysdk = initYsdk;
-            ysdk.getPlayer().then(_player => {
-                player = _player;
-                loadGame();
-            }).catch(err => { loadGame(); });
-        }).catch(err => { loadGame(); });
-    } else {
-        console.log("Локальный запуск на ПК. Яндекс SDK отсутствует.");
-        loadGame();
-    }
+    console.log("Запуск игры в окружении ВКонтакте...");
+    // Игра сразу пытается загрузить сохранение из памяти браузера
+    loadGame();
 };
 
-// --- ВЫБОР ТРЕНЕРА И СИГНАЛ GAME READY ---
+// --- ВЫБОР ТРЕНЕРА ---
 function selectGender(gender) {
     gameState.gender = gender;
     document.getElementById("start-screen").style.display = "none";
     updateUI();
     saveGame();
-
-    // Отправляем критически важный сигнал модераторам Яндекса
-    if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
-        ysdk.features.LoadingAPI.ready();
-        console.log("Вызван API: Game Ready!");
-    }
+    console.log("Персонаж выбран, игра сохранена.");
 }
 
+// --- ОБНОВЛЕНИЕ АВАТАРА ТРЕНЕРА ---
 function updateAvatar() {
     const avatarBlock = document.getElementById("avatar-block");
-    if (!gameState.gender) return;
+    if (!avatarBlock || !gameState.gender) return;
 
     let imageName = "";
     if (gameState.health < 30 || gameState.satiety < 30) {
@@ -201,102 +186,11 @@ function updateAvatar() {
     avatarBlock.innerHTML = `<img src="${imageName}" alt="Тренер">`;
 }
 
-function updateUI() {
-    if (!gameState.gender) {
-        document.getElementById("start-screen").style.display = "flex";
-        return;
-    } else {
-        document.getElementById("start-screen").style.display = "none";
-    }
-
-    document.getElementById("stat-day").textContent = gameState.day;
-    document.getElementById("stat-money").textContent = gameState.money;
-    document.getElementById("val-health").textContent = Math.round(gameState.health);
-    document.getElementById("val-satiety").textContent = Math.round(gameState.satiety);
-    document.getElementById("val-mood").textContent = Math.round(gameState.mood);
-
-    document.getElementById("bar-health").style.width = gameState.health + "%";
-    document.getElementById("bar-satiety").style.width = gameState.satiety + "%";
-    document.getElementById("bar-mood").style.width = gameState.mood + "%";
-
-    updateAvatar();
-
-    if (gameState.health <= 0 || gameState.satiety <= 0) {
-        showGameOverModal();
-    }
-}
-
-function makeAction(type) {
-    if (gameState.health <= 0 || gameState.satiety <= 0) return;
-
-    gameState.day += 1;
-    gameState.satiety -= 8;
-
-    const phrases = simpleTexts[type];
-    const randomPhrase = phrases[Math.floor(Math.random() * phrases.length)];
-    document.getElementById("text-log").textContent = randomPhrase;
-
-    if (type === 'eat') {
-        if (gameState.money >= 300) {
-            gameState.money -= 300;
-            gameState.health += 35;
-            gameState.satiety += 5;
-        } else {
-            document.getElementById("text-log").textContent = "❌ Нет денег на спортивное питание!";
-        }
-    } else if (type === 'rest') {
-        gameState.health += 40;
-        gameState.mood += 15;
-    }
-
-    finalizeTurn();
-}
-
-function startTrainerQuiz(type) {
-    if (gameState.health <= 0 || gameState.satiety <= 0) return;
-if (type === 'study' && gameState.money < 500) {
-        document.getElementById("text-log").textContent = "❌ Не хватает 500 ₽ на продвинутые курсы!";
-        return;
-    }
-
-    gameState.day += 1;
-    gameState.satiety -= 8;
-
-    let currentItem = null;
-
-    if (type === 'study') {
-        gameState.money -= 500;
-        currentItem = coursesQuestions[Math.floor(Math.random() * coursesQuestions.length)];
-    } else if (type === 'work') {
-        gameState.money += 1000;
-        gameState.health -= 25;
-        currentItem = trainingCases[Math.floor(Math.random() * trainingCases.length)];
-    }
-
-    document.getElementById("text-log").textContent = currentItem.question;
-
-    document.getElementById("main-actions-block").style.display = "none";
-    document.getElementById("ad-block").style.display = "none";
-
-    const quizBlock = document.getElementById("quiz-options-block");
-    quizBlock.innerHTML = "";
-    quizBlock.style.display = "flex";
-
-    currentItem.options.forEach(option => {
-        const button = document.createElement("button");
-        button.className = "btn btn-quiz";
-        button.textContent = option;
-        button.onclick = function() {
-            checkAnswer(option, currentItem.correct, type);
-        };
-        quizBlock.appendChild(button);
-    });
-}
-
+// --- ПРОВЕРКА ОТВЕТОВ В ТЕСТАХ ---
 function checkAnswer(selectedOption, correctAnswer, type) {
     const quizBlock = document.getElementById("quiz-options-block");
     
-    quizBlock.style.display = "none";
+    if (quizBlock) quizBlock.style.display = "none";
     document.getElementById("main-actions-block").style.display = "block";
     document.getElementById("ad-block").style.display = "block";
 
@@ -322,10 +216,11 @@ function checkAnswer(selectedOption, correctAnswer, type) {
         }
     }
 
-    document.getElementById("text-log").textContent = resultText;
+    updateLog(resultText);
     finalizeTurn();
 }
 
+// --- ЗАВЕРШЕНИЕ ХОДА И ПРОВЕРКА ЛИМИТОВ ---
 function finalizeTurn() {
     if (gameState.health > 100) gameState.health = 100;
     if (gameState.satiety > 100) gameState.satiety = 100;
@@ -333,80 +228,91 @@ function finalizeTurn() {
 
     if (gameState.health < 0) gameState.health = 0;
     if (gameState.satiety < 0) gameState.satiety = 0;
+    if (gameState.mood < 0) gameState.mood = 0;
 
     updateUI();
     saveGame();
 }
 
+// --- ФУНКЦИИ ДЛЯ РЕКЛАМЫ ВКОНТАКТЕ ---
 function watchAdForMoney() {
     vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
         .then((data) => {
             if (data.result) {
                 gameState.money += 1500;
                 document.getElementById('stat-money').innerText = gameState.money;
-                document.getElementById("text-log").textContent = "📺 Вы посмотрели рекламу и заработали 1500 ₽!";
+                updateLog("📺 Вы посмотрели рекламу и заработали 1500 ₽!");
                 saveGame();
             }
         })
         .catch((error) => {
-            console.error("Ошибка рекламы:", error);
+            console.error("Ошибка рекламы ВК:", error);
+            updateLog("❌ Не удалось загрузить рекламу. Попробуйте позже.");
         });
 }
-        });
-    } else {
-        gameState.health = 50;
-        gameState.satiety = 50;
-        gameState.mood = 50;
-        document.getElementById("game-over-modal").style.display = "none";
-        document.getElementById("text-log").textContent = "✨ Тестовое воскрешение на ПК! Все параметры тренера подняты до 50%.";
-        finalizeTurn();
-    }
-}
+
 function watchAdForRevive() {
-    // Вызываем официальную рекламу ВКонтакте
     vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
         .then((data) => {
             if (data.result) {
-                // Игрок досмотрел рекламу до конца — восстанавливаем его
                 gameState.health = 50;
                 gameState.satiety = 50;
                 gameState.mood = 50;
                 document.getElementById("game-over-modal").style.display = "none";
-                document.getElementById("text-log").textContent = "✨ Ты посмотрел рекламу, восстановил силы и вернулся на работу тренером!";
+                updateLog("✨ Ты посмотрел рекламу, восстановил силы и вернулся на работу тренером!");
                 finalizeTurn();
-            } else {
-                console.log('Реклама была закрыта раньше времени');
             }
         })
         .catch((error) => {
-            console.error('Ошибка показа рекламы в ВК:', error);
-            // Подстраховка: если реклама в ВК не загрузилась, даём запустить игру бесплатно (как у вас и было на ПК)
+            console.error('Ошибка рекламы в ВК:', error);
+            // Бесплатное тестовое воскрешение на случай сбоя сети рекламы
             gameState.health = 50;
             gameState.satiety = 50;
             gameState.mood = 50;
             document.getElementById("game-over-modal").style.display = "none";
-            document.getElementById("text-log").textContent = "✨ Ошибка рекламы! Силы тренера восстановлены автоматически.";
+            updateLog("✨ Ошибка сети! Силы тренера восстановлены автоматически на 50%.");
             finalizeTurn();
+        });
 }
+
+// --- СОХРАНЕНИЕ И ЗАГРУЗКА ПРОГРЕССА В ВК ---
 function saveGame() {
-    // Во ВКонтакте сохраняем всё в память браузера (localStorage)
     localStorage.setItem("trainer_sim_save_final_v4", JSON.stringify(gameState));
 }
+
 function loadGame() {
-    // Загружаем прогресс из памяти браузера
     const save = localStorage.getItem("trainer_sim_save_final_v4");
     if (save) { 
         gameState = JSON.parse(save); 
+        // Если игра уже начата и персонаж выбран, скрываем стартовый экран
+        if (gameState.gender) {
+            const startScreen = document.getElementById("start-screen");
+            if (startScreen) startScreen.style.display = "none";
+        }
     }
     updateUI();
 }
+
 function showGameOverModal() {
-    document.getElementById("final-day").textContent = gameState.day;
-    document.getElementById("game-over-modal").style.display = "flex";
+    const finalDay = document.getElementById("final-day");
+    const modal = document.getElementById("game-over-modal");
+    if (finalDay) finalDay.textContent = gameState.day;
+    if (modal) modal.style.display = "flex";
 }
+
 function restartGame() {
     gameState = { day: 1, money: 500, health: 100, satiety: 100, mood: 100, gender: null };
-    document.getElementById("game-over-modal").style.display = "none";
+    const modal = document.getElementById("game-over-modal");
+    const startScreen = document.getElementById("start-screen");
+    
+    if (modal) modal.style.display = "none";
+    if (startScreen) startScreen.style.display = "flex"; // Показываем выбор тренера заново
+    
     updateUI();
     saveGame();
+}
+
+function updateLog(text) {
+    const log = document.getElementById('text-log');
+    if (log) log.textContent = text;
 }
