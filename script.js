@@ -1,14 +1,4 @@
 // --- СОСТОЯНИЕ ИГРЫ ТРЕНЕРА ---
-vkBridge.send('VKWebAppInit')
-  .then((data) => {
-    if (data.result) {
-      console.log('VK Bridge успешно запущен');
-    }
-  })
-  .catch((error) => {
-    console.error('Ошибка инициализации VK Bridge', error);
-  });
-
 let gameState = {
     day: 1,
     money: 500,
@@ -18,10 +8,50 @@ let gameState = {
     gender: null
 };
 
-// Переменные для интеграции SDK Яндекса
-let ysdk = null;
-let player = null;
+// --- ФУНКЦИИ ДЛЯ РЕКЛАМЫ ВК (Вместо Яндекса) ---
+function watchAdForMoney() {
+    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+        .then((data) => {
+            if (data.result) {
+                // Игрок досмотрел рекламу — начисляем деньги
+                gameState.money += 1500;
+                document.getElementById('stat-money').innerText = gameState.money;
+                updateLog("📺 Вы посмотрели рекламу и заработали 1500 ₽!");
+            }
+        })
+        .catch((error) => {
+            console.error("Ошибка показа рекламы:", error);
+            updateLog("❌ Не удалось загрузить рекламу. Попробуйте позже.");
+        });
+}
 
+function watchAdForRevive() {
+    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+        .then((data) => {
+            if (data.result) {
+                // Игрок досмотрел рекламу для восстановления
+                gameState.health = 50;
+                gameState.satiety = 50;
+                gameState.mood = 50;
+                
+                // Закрываем модальное окно проигрыша
+                document.getElementById('game-over-modal').style.display = 'none';
+                
+                // Обновляем полоски на экране (вызовите вашу функцию обновления интерфейса, если она есть)
+                updateUI(); 
+                updateLog("❤️ Вы восстановили силы за рекламу и возвращаетесь в игру!");
+            }
+        })
+        .catch((error) => {
+            console.error("Ошибка показа рекламы:", error);
+        });
+}
+
+// Вспомогательная функция для вывода текста (замените на свою, если у вас она называется иначе)
+function updateLog(text) {
+    const log = document.getElementById('text-log');
+    if (log) log.innerText = text;
+}
 // --- БАЗА ВОПРОСОВ ПО АНАТОМИИ (КУРСЫ) ---
 const coursesQuestions = [
     {
