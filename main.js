@@ -271,15 +271,20 @@ function saveGame() {
 }
 
 function loadGame() {
-    // Отправляем ВК сигнал, что наше приложение полностью загрузилось и готово к показу
-    vkBridge.send('VKWebAppInit')
-        .then((data) => {
-            console.log('VK Bridge успешно ответил, убираем загрузку');
-        })
-        .catch((error) => {
-            console.error('Ошибка инициализации при загрузке:', error);
-        });
+    // Проверяем, успела ли загрузиться библиотека VK Bridge
+    if (typeof vkBridge !== 'undefined') {
+        console.log('Библиотека VK Bridge на месте, отправляем сигнал инициализации...');
+        vkBridge.send('VKWebAppInit')
+            .then((data) => { console.log('VK Bridge успешно ответил!'); })
+            .catch((error) => { console.error('Ошибка инициализации ВК:', error); });
+    } else {
+        // Если библиотека ещё не загрузилась, пробуем отправить сигнал через полсекунды
+        console.log('VK Bridge ещё не готов, ждем загрузки скрипта...');
+        setTimeout(loadGame, 500);
+        return; // Выходим из функции, чтобы код ниже не сломался
+    }
 
+    // Логика загрузки сохранения из памяти
     const save = localStorage.getItem("trainer_sim_save_final_v4");
     if (save) { 
         gameState = JSON.parse(save); 
@@ -290,6 +295,7 @@ function loadGame() {
     }
     updateUI();
 }
+
 
 function showGameOverModal() {
     const finalDay = document.getElementById("final-day");
