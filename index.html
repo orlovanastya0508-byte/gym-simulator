@@ -5,10 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Симулятор тренера — VK Mini App</title>
     <link rel="stylesheet" href="style.css">
-    <!-- Правильное подключение VK Bridge (без лишнего) -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge@latest/dist/browser.min.js"></script>
 </head>
 <body>
+
+<!-- КНОПКА ВКЛЮЧЕНИЯ МУЗЫКИ (плавающая) -->
+<button id="musicToggleBtn" class="music-toggle" title="Включить/выключить музыку">🔇</button>
+
+<!-- АУДИО ЭЛЕМЕНТ (фоновая музыка) -->
+<audio id="bgMusic" loop preload="auto">
+    <source src="bg-music.mp3" type="audio/mpeg">
+    <!-- Если файла нет, ничего страшного -->
+</audio>
 
 <!-- СТАРТОВЫЙ ЭКРАН ВЫБОРА ПОЛА -->
 <div class="start-screen" id="start-screen">
@@ -33,7 +41,6 @@
 
 <!-- ГЛАВНЫЙ ЭКРАН ИГРЫ -->
 <div class="game-container" id="game-container">
-    <!-- ПОКАЗАТЕЛИ ТРЕНЕРА -->
     <section class="stats-container">
         <div class="stat-bar-wrapper">
             <label>⚡ Энергия: <span id="val-health">100</span>%</label>
@@ -49,28 +56,20 @@
         </div>
     </section>
 
-    <!-- Игровая шапка -->
     <header class="game-header">
         <h2>День: <span id="stat-day">1</span></h2>
         <div class="balance">Баланс: <span id="stat-money">500</span> ₽</div>
     </header>
 
-    <!-- Центральная зона (лог + аватар) -->
     <div class="main-game-area">
         <section class="text-log" id="text-log">
             Добро пожаловать в фитнес-клуб! Твоя цель — тренировать клиентов, прокачивать авторитет и открыть сеть своих залов.
         </section>
-        <section class="avatar-container" id="avatar-block">
-            <!-- Сюда JS вставит картинку -->
-        </section>
+        <section class="avatar-container" id="avatar-block"></section>
     </div>
 
-    <!-- Блок вариантов ответов для кейсов и курсов -->
-    <section class="quiz-options-container" id="quiz-options-block" style="display: none;">
-        <!-- Кнопки генерируются динамически -->
-    </section>
+    <section class="quiz-options-container" id="quiz-options-block" style="display: none;"></section>
 
-    <!-- Основные кнопки действий -->
     <section class="actions-container" id="main-actions-block">
         <div class="actions-grid">
             <button class="btn btn-action" onclick="startTrainerQuiz('work')">👟 Тренировка (+1000 ₽)</button>
@@ -80,13 +79,11 @@
         </div>
     </section>
 
-    <!-- Рекламный блок -->
     <section class="ad-container" id="ad-block">
         <button class="btn btn-ad" onclick="watchAdForMoney()">📺 Посмотреть рекламу: +1500 ₽</button>
     </section>
 </div>
 
-<!-- Модальное окно проигрыша -->
 <div class="modal" id="game-over-modal">
     <div class="modal-content">
         <h2>💀 Вы выгорели!</h2>
