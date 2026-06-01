@@ -294,6 +294,81 @@ function restartGame() {
     updateUI();
     saveGame();
 }
+// --- ФУНКЦИЯ ДЛЯ ЗАПУСКА КВЕСТОВ И ТЕСТОВ ---
+function startTrainerQuiz(type) {
+    const quizBlock = document.getElementById("quiz-options-block");
+    const mainActions = document.getElementById("main-actions-block");
+    const adBlock = document.getElementById("ad-block");
+
+    if (!quizBlock || !mainActions || !adBlock) return;
+
+    // Скрываем обычные кнопки, показываем блок с тестом
+    mainActions.style.display = "none";
+    adBlock.style.display = "none";
+    quizBlock.style.display = "block";
+    quizBlock.innerHTML = ""; // Очищаем старые кнопки
+
+    if (type === 'study') {
+        // Проверяем, хватает ли денег на курсы
+        if (gameState.money < 500) {
+            updateLog("❌ У тебя недостаточно денег на курсы по анатомии! Нужно 500 ₽.");
+            quizBlock.style.display = "none";
+            mainActions.style.display = "block";
+            adBlock.style.display = "block";
+            return;
+        }
+        gameState.money -= 500;
+
+        // Берем случайный вопрос из базы по анатомии
+        const randomQuestion = coursesQuestions[Math.floor(Math.random() * coursesQuestions.length)];
+        document.getElementById("text-log").textContent = `🎓 Курсы повышения квалификации. Вопрос: ${randomQuestion.question}`;
+
+        // Генерируем кнопки с вариантами ответов
+        randomQuestion.options.forEach(option => {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-action";
+            btn.textContent = option;
+            btn.onclick = () => checkAnswer(option, randomQuestion.correct, 'study');
+            quizBlock.appendChild(btn);
+        });
+    } else if (type === 'work') {
+        // Логика обычной тренировки
+        if (gameState.health < 20) {
+            updateLog("❌ Ты слишком устал для проведения тренировки! Отдохни или выпей спортпит.");
+            quizBlock.style.display = "none";
+            mainActions.style.display = "block";
+            adBlock.style.display = "block";
+            return;
+        }
+        gameState.health -= 20;
+        gameState.money += 1000;
+        gameState.day += 1;
+        updateLog("👟 Ты успешно провел персональную тренировку для клиента! Получено +1000 ₽.");
+        finalizeTurn();
+    }
+}
+
+// --- ФУНКЦИЯ ДЛЯ ПРОСТЫХ ДЕЙСТВИЙ (ЕДА И ОТДЫХ) ---
+function makeAction(type) {
+    if (type === 'eat') {
+        if (gameState.money < 300) {
+            updateLog("❌ Нет денег на спортпит! Нужно 300 ₽.");
+            return;
+        }
+        gameState.money -= 300;
+        gameState.health += 20;
+        gameState.satiety += 10;
+        const textArray = simpleTexts.eat;
+        updateLog(textArray[Math.floor(Math.random() * textArray.length)]);
+    } else if (type === 'rest') {
+        gameState.health += 40;
+        gameState.mood += 10;
+        gameState.day += 1;
+        const textArray = simpleTexts.rest;
+        updateLog(textArray[Math.floor(Math.random() * textArray.length)]);
+    }
+    finalizeTurn();
+}
 
 function updateLog(text) {
     const log = document.getElementById('text-log');
