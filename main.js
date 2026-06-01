@@ -271,6 +271,15 @@ function saveGame() {
 }
 
 function loadGame() {
+    // Отправляем ВК сигнал, что наше приложение полностью загрузилось и готово к показу
+    vkBridge.send('VKWebAppInit')
+        .then((data) => {
+            console.log('VK Bridge успешно ответил, убираем загрузку');
+        })
+        .catch((error) => {
+            console.error('Ошибка инициализации при загрузке:', error);
+        });
+
     const save = localStorage.getItem("trainer_sim_save_final_v4");
     if (save) { 
         gameState = JSON.parse(save); 
