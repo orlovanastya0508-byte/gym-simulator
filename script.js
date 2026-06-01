@@ -352,7 +352,6 @@ function watchAdForMoney() {
             console.error("Ошибка рекламы:", error);
         });
 }
-
         });
     } else {
         gameState.health = 50;
@@ -363,7 +362,6 @@ function watchAdForMoney() {
         finalizeTurn();
     }
 }
-
 function watchAdForRevive() {
     // Вызываем официальную рекламу ВКонтакте
     vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
@@ -389,14 +387,11 @@ function watchAdForRevive() {
             document.getElementById("game-over-modal").style.display = "none";
             document.getElementById("text-log").textContent = "✨ Ошибка рекламы! Силы тренера восстановлены автоматически.";
             finalizeTurn();
-        });
 }
-
 function saveGame() {
     // Во ВКонтакте сохраняем всё в память браузера (localStorage)
     localStorage.setItem("trainer_sim_save_final_v4", JSON.stringify(gameState));
 }
-
 function loadGame() {
     // Загружаем прогресс из памяти браузера
     const save = localStorage.getItem("trainer_sim_save_final_v4");
@@ -405,17 +400,13 @@ function loadGame() {
     }
     updateUI();
 }
-
 function showGameOverModal() {
     document.getElementById("final-day").textContent = gameState.day;
     document.getElementById("game-over-modal").style.display = "flex";
 }
-
 function restartGame() {
     gameState = { day: 1, money: 500, health: 100, satiety: 100, mood: 100, gender: null };
     document.getElementById("game-over-modal").style.display = "none";
     updateUI();
     saveGame();
 }
-
-
