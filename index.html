@@ -2,13 +2,11 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <!-- 1. Сначала загружаем правильный ВК Бридж -->
-    <script src="https://unpkg.com"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Симулятор тренера</title>
     
-    <!-- 2. Сразу запускаем его, чтобы ВК понял, что игра открылась -->
-    <script>
-        vkBridge.send("VKWebAppInit");
-    </script>
+    <!-- 1. ПОДКЛЮЧАЕМ ПРАВИЛЬНЫЙ И ПОЛНЫЙ СКРИПТ VK BRIDGE -->
+    <script src="https://unpkg.com"></script>
 
     <!-- Подключение файла стилей -->
     <link rel="stylesheet" href="style.css">
@@ -113,8 +111,7 @@
         </div>
     </div>
 
-    <!-- Подключение файла логики -->
-    <script src="main.js?v=13"></script>
+    <!-- 2. ПОДКЛЮЧАЕМ СЕРЕДИНУ И ЛОГИКУ ИГРЫ С ФОРСИРОВАННЫМ СБРОСОМ КЭША -->
+    <script src="main.js?v=15"></script>
 </body>
 </html>
-
