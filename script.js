@@ -1,4 +1,6 @@
 // --- СОСТОЯНИЕ ИГРЫ ТРЕНЕРА ---
+vkBridge.send('VKWebAppInit');
+
 let gameState = {
     day: 1,
     money: 500,
