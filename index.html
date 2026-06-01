@@ -2,116 +2,101 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Симулятор тренера</title>
-    
-    <!-- 1. ПОДКЛЮЧАЕМ ПРАВИЛЬНЫЙ И ПОЛНЫЙ СКРИПТ VK BRIDGE -->
-    <script src="https://unpkg.com"></script>
-
-    <!-- Подключение файла стилей -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Симулятор тренера — VK Mini App</title>
     <link rel="stylesheet" href="style.css">
+    <!-- Правильное подключение VK Bridge (без лишнего) -->
+    <script src="https://unpkg.com/@vkontakte/vk-bridge@latest/dist/browser.min.js"></script>
 </head>
 <body>
 
-    <!-- 1. СТАРТОВЫЙ ЭКРАН: ВЫБОР ПЕРСОНАЖА -->
-    <div class="start-screen" id="start-screen">
-        <div class="start-content">
-            <h1>Выбери своего тренера</h1>
-            <div class="char-selection-grid">
-                
-                <!-- Карточка Парня -->
-                <div class="char-card boy-card" onclick="selectGender('boy')">
-                    <div class="char-avatar-preview">
-                        <img src="boy.png" alt="Тренер Парень">
-                    </div>
-                    <button class="btn btn-action">Играть за Парня</button>
+<!-- СТАРТОВЫЙ ЭКРАН ВЫБОРА ПОЛА -->
+<div class="start-screen" id="start-screen">
+    <div class="start-content">
+        <h1>Выбери своего тренера</h1>
+        <div class="char-selection-grid">
+            <div class="char-card boy-card" onclick="selectGender('boy')">
+                <div class="char-avatar-preview">
+                    <img src="boy.png" alt="Тренер Парень">
                 </div>
-                
-                <!-- Карточка Девушки -->
-                <div class="char-card girl-card" onclick="selectGender('girl')">
-                    <div class="char-avatar-preview">
-                        <img src="girl.png" alt="Тренер Девушка">
-                    </div>
-                    <button class="btn btn-action">Играть за Девушку</button>
+                <button class="btn btn-action">Играть за Парня</button>
+            </div>
+            <div class="char-card girl-card" onclick="selectGender('girl')">
+                <div class="char-avatar-preview">
+                    <img src="girl.png" alt="Тренер Девушка">
                 </div>
-
+                <button class="btn btn-action">Играть за Девушку</button>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- 2. ГЛАВНЫЙ ЭКРАН ИГРЫ -->
-    <div class="game-container">
-        
-        <!-- ПОКАЗАТЕЛИ ТРЕНЕРА В САМОМ ВЕРХУ -->
-        <section class="stats-container">
-            <div class="stat-bar-wrapper">
-                <label>⚡ Энергия: <span id="val-health">100</span>%</label>
-                <div class="progress-bar"><div id="bar-health" class="progress-fill health" style="width: 100%"></div></div>
-            </div>
-            <div class="stat-bar-wrapper">
-                <label>💪 Авторитет: <span id="val-satiety">100</span>%</label>
-                <div class="progress-bar"><div id="bar-satiety" class="progress-fill satiety" style="width: 100%"></div></div>
-            </div>
-            <div class="stat-bar-wrapper">
-                <label>🏆 Репутация: <span id="val-mood">100</span>%</label>
-                <div class="progress-bar"><div id="bar-mood" class="progress-fill mood" style="width: 100%"></div></div>
-            </div>
-        </section>
-
-        <!-- Игровая шапка (День и Деньги) -->
-        <header class="game-header">
-            <h2>День: <span id="stat-day">1</span></h2>
-            <div class="balance">Баланс: <span id="stat-money">500</span> ₽</div>
-        </header>
-
-        <!-- ЦЕНТРАЛЬНАЯ ЗОНА (Диалог слева, Персонаж справа) -->
-        <div class="main-game-area">
-            
-            <!-- Текстовый лог -->
-            <section class="text-log" id="text-log">
-                Добро пожаловать в фитнес-клуб! Твоя цель — тренировать клиентов, прокачивать авторитет и открыть сеть своих залов.
-            </section>
-
-            <!-- Блок для аватара тренера -->
-            <section class="avatar-container" id="avatar-block">
-                <!-- Картинка вставится автоматически через JS -->
-            </section>
-
+<!-- ГЛАВНЫЙ ЭКРАН ИГРЫ -->
+<div class="game-container" id="game-container">
+    <!-- ПОКАЗАТЕЛИ ТРЕНЕРА -->
+    <section class="stats-container">
+        <div class="stat-bar-wrapper">
+            <label>⚡ Энергия: <span id="val-health">100</span>%</label>
+            <div class="progress-bar"><div id="bar-health" class="progress-fill health" style="width: 100%"></div></div>
         </div>
+        <div class="stat-bar-wrapper">
+            <label>💪 Авторитет: <span id="val-satiety">100</span>%</label>
+            <div class="progress-bar"><div id="bar-satiety" class="progress-fill satiety" style="width: 100%"></div></div>
+        </div>
+        <div class="stat-bar-wrapper">
+            <label>🏆 Репутация: <span id="val-mood">100</span>%</label>
+            <div class="progress-bar"><div id="bar-mood" class="progress-fill mood" style="width: 100%"></div></div>
+        </div>
+    </section>
 
-        <!-- СКРЫТЫЙ БЛОК ВАРИАНТОВ ОТВЕТОВ ДЛЯ ТЕСТОВ И КЕЙСОВ -->
-        <section class="quiz-options-container" id="quiz-options-block" style="display: none;">
-            <!-- Кнопки ответов сгенерируются в JS -->
+    <!-- Игровая шапка -->
+    <header class="game-header">
+        <h2>День: <span id="stat-day">1</span></h2>
+        <div class="balance">Баланс: <span id="stat-money">500</span> ₽</div>
+    </header>
+
+    <!-- Центральная зона (лог + аватар) -->
+    <div class="main-game-area">
+        <section class="text-log" id="text-log">
+            Добро пожаловать в фитнес-клуб! Твоя цель — тренировать клиентов, прокачивать авторитет и открыть сеть своих залов.
         </section>
-
-        <!-- ГЛАВНЫЕ ЗЕЛЕНЫЕ КНОПКИ ДЕЙСТВИЙ -->
-        <section class="actions-container" id="main-actions-block">
-            <div class="actions-grid">
-                <button class="btn btn-action" onclick="startTrainerQuiz('work')">👟 Тренировка (+1000 ₽)</button>
-                <button class="btn btn-action" onclick="makeAction('eat')">🥩 Спортпит (-300 ₽)</button>
-                <button class="btn btn-action" onclick="makeAction('rest')">🛌 Отдых (+40 ⚡)</button>
-                <button class="btn btn-action" onclick="startTrainerQuiz('study')">🎓 Курсы (-500 ₽)</button>
-            </div>
-        </section>
-
-        <!-- СТИЛЬНАЯ ЧЕРНАЯ КНОПКА РЕКЛАМЫ -->
-        <section class="ad-container" id="ad-block">
-            <button class="btn btn-ad" id="btn-ad-money" onclick="watchAdForMoney()">📺 Посмотреть рекламу: +1500 ₽</button>
+        <section class="avatar-container" id="avatar-block">
+            <!-- Сюда JS вставит картинку -->
         </section>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО ПРОИГРЫША -->
-    <div class="modal" id="game-over-modal">
-        <div class="modal-content">
-            <h2>💀 Вы выгорели!</h2>
-            <p id="game-over-reason">У вас закончилась энергия, или авторитет упал до нуля...</p>
-            <p>Вы продержались дней: <strong id="final-day">0</strong></p>
-            <button class="btn btn-ad" onclick="watchAdForRevive()">📺 Восстановить силы за рекламу</button>
-            <button class="btn btn-action" onclick="restartGame()">Начать карьеру заново</button>
-        </div>
-    </div>
+    <!-- Блок вариантов ответов для кейсов и курсов -->
+    <section class="quiz-options-container" id="quiz-options-block" style="display: none;">
+        <!-- Кнопки генерируются динамически -->
+    </section>
 
-    <!-- 2. ПОДКЛЮЧАЕМ СЕРЕДИНУ И ЛОГИКУ ИГРЫ С ФОРСИРОВАННЫМ СБРОСОМ КЭША -->
-    <script src="https://github.io"></script>
+    <!-- Основные кнопки действий -->
+    <section class="actions-container" id="main-actions-block">
+        <div class="actions-grid">
+            <button class="btn btn-action" onclick="startTrainerQuiz('work')">👟 Тренировка (+1000 ₽)</button>
+            <button class="btn btn-action" onclick="makeAction('eat')">🥩 Спортпит (-300 ₽)</button>
+            <button class="btn btn-action" onclick="makeAction('rest')">🛌 Отдых (+40 ⚡)</button>
+            <button class="btn btn-action" onclick="startTrainerQuiz('study')">🎓 Курсы (-500 ₽)</button>
+        </div>
+    </section>
+
+    <!-- Рекламный блок -->
+    <section class="ad-container" id="ad-block">
+        <button class="btn btn-ad" onclick="watchAdForMoney()">📺 Посмотреть рекламу: +1500 ₽</button>
+    </section>
+</div>
+
+<!-- Модальное окно проигрыша -->
+<div class="modal" id="game-over-modal">
+    <div class="modal-content">
+        <h2>💀 Вы выгорели!</h2>
+        <p id="game-over-reason">У вас закончилась энергия, или авторитет упал до нуля...</p>
+        <p>Вы продержались дней: <strong id="final-day">0</strong></p>
+        <button class="btn btn-ad" onclick="watchAdForRevive()">📺 Восстановить силы за рекламу</button>
+        <button class="btn btn-action" onclick="restartGame()">Начать карьеру заново</button>
+    </div>
+</div>
+
+<script src="main.js"></script>
 </body>
 </html>
