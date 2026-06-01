@@ -1,10 +1,15 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-   <script src="https://unpkg.com"></script>
-<script>
-    vkBridge.send("VKWebAppInit");
-</script>
+    <meta charset="UTF-8">
+    <!-- 1. Сначала загружаем правильный ВК Бридж -->
+    <script src="https://unpkg.com"></script>
+    
+    <!-- 2. Сразу запускаем его, чтобы ВК понял, что игра открылась -->
+    <script>
+        vkBridge.send("VKWebAppInit");
+    </script>
+
     <!-- Подключение файла стилей -->
     <link rel="stylesheet" href="style.css">
 </head>
