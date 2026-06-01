@@ -339,39 +339,20 @@ function finalizeTurn() {
 }
 
 function watchAdForMoney() {
-    if (ysdk) {
-        ysdk.adv.showRewardedVideo({
-            callbacks: {
-                onOpen: () => console.log('Реклама запущена'),
-                onRewarded: () => {
-                    gameState.money += 1500;
-                    document.getElementById("text-log").textContent = "💰 Рекламный спонсор выплатил тебе премию +1500 ₽ за продвижение фитнес-бренда!";
-                    finalizeTurn();
-                },
-                onClose: () => console.log('Реклама закрыта')
+    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+        .then((data) => {
+            if (data.result) {
+                gameState.money += 1500;
+                document.getElementById('stat-money').innerText = gameState.money;
+                document.getElementById("text-log").textContent = "📺 Вы посмотрели рекламу и заработали 1500 ₽!";
+                saveGame();
             }
+        })
+        .catch((error) => {
+            console.error("Ошибка рекламы:", error);
         });
-    } else {
-        gameState.money += 1500;
-        document.getElementById("text-log").textContent = "📺 Тестовый режим на ПК: начислено +1500 ₽ за просмотр рекламы!";
-        finalizeTurn();
-    }
 }
 
-function watchAdForRevive() {
-    if (ysdk) {
-        ysdk.adv.showRewardedVideo({
-            callbacks: {
-                onRewarded: () => {
-                    gameState.health = 50;
-                    gameState.satiety = 50;
-                    gameState.mood = 50;
-                    document.getElementById("game-over-modal").style.display = "none";
-                    document.getElementById("text-log").textContent = "✨ Ты восстановил силы и вернулся на работу тренером!";
-                    finalizeTurn();
-                },
-                onClose: () => console.log('Модалка закрыта')
-            }
         });
     } else {
         gameState.health = 50;
@@ -383,26 +364,46 @@ function watchAdForRevive() {
     }
 }
 
-function saveGame() {
-    if (player) {
-        player.setData({ gameState: JSON.stringify(gameState) });
-    } else {
-        localStorage.setItem("trainer_sim_save_final_v4", JSON.stringify(gameState));
-    }
+function watchAdForRevive() {
+    // Вызываем официальную рекламу ВКонтакте
+    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+        .then((data) => {
+            if (data.result) {
+                // Игрок досмотрел рекламу до конца — восстанавливаем его
+                gameState.health = 50;
+                gameState.satiety = 50;
+                gameState.mood = 50;
+                document.getElementById("game-over-modal").style.display = "none";
+                document.getElementById("text-log").textContent = "✨ Ты посмотрел рекламу, восстановил силы и вернулся на работу тренером!";
+                finalizeTurn();
+            } else {
+                console.log('Реклама была закрыта раньше времени');
+            }
+        })
+        .catch((error) => {
+            console.error('Ошибка показа рекламы в ВК:', error);
+            // Подстраховка: если реклама в ВК не загрузилась, даём запустить игру бесплатно (как у вас и было на ПК)
+            gameState.health = 50;
+            gameState.satiety = 50;
+            gameState.mood = 50;
+            document.getElementById("game-over-modal").style.display = "none";
+            document.getElementById("text-log").textContent = "✨ Ошибка рекламы! Силы тренера восстановлены автоматически.";
+            finalizeTurn();
+        });
 }
 
-// Посмотрите внимательно ниже: вот загрузка и сброс
+function saveGame() {
+    // Во ВКонтакте сохраняем всё в память браузера (localStorage)
+    localStorage.setItem("trainer_sim_save_final_v4", JSON.stringify(gameState));
+}
+
 function loadGame() {
-    if (player) {
-        player.getData(["gameState"]).then(data => {
-            if (data.gameState) { gameState = JSON.parse(data.gameState); }
-            updateUI();
-        });
-    } else {
-        const save = localStorage.getItem("trainer_sim_save_final_v4");
-        if (save) { gameState = JSON.parse(save); }
-        updateUI();
+    // Загружаем прогресс из памяти браузера
+    const save = localStorage.getItem("trainer_sim_save_final_v4");
+    if (save) { 
+        gameState = JSON.parse(save); 
     }
+    updateUI();
 }
 
 function showGameOverModal() {
@@ -416,4 +417,5 @@ function restartGame() {
     updateUI();
     saveGame();
 }
+
 
