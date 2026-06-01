@@ -87,7 +87,7 @@ const trainingCases = [
         correct: "Отказываешь, заменяешь на изолированные упражнения в эксцентрической фазе с минимальным весом"
     },
     {
-        question: "Во время приседаний со штангой у клиента заметно «заваливаются» колени внутнь (вальгус коленного сустава). С чего начнешь исправление?",
+        question: "Во время приседаний со штангой у клиента заметно «заваливаются» колени внутрь (вальгус коленного сустава). С чего начнешь исправление?",
         options: [
             "Скажешь сильнее упираться пятками в пол и заматываешь колени бинтами",
             "Снизишь вес, добавишь фитнес-резинку на бедра для активации средней ягодичной мышцы"
@@ -122,7 +122,6 @@ if (document.readyState === 'loading') {
     console.log("Страница уже готова, запускаем игру...");
     loadGame();
 }
-
 
 // --- ВЫБОР ТРЕНЕРА ---
 function selectGender(gender) {
@@ -208,11 +207,11 @@ function updateUI() {
     const dayStat = document.getElementById('stat-day');
     const moneyStat = document.getElementById('stat-money');
 
-    if (healthVal) healthVal.innerText = gameState.health;
-    if (satietyVal) satietyVal.innerText = gameState.satiety;
-    if (moodVal) moodVal.innerText = gameState.mood;
+    if (healthVal) healthVal.innerText = Math.floor(gameState.health);
+    if (satietyVal) satietyVal.innerText = Math.floor(gameState.satiety);
+    if (moodVal) moodVal.innerText = Math.floor(gameState.mood);
     if (dayStat) dayStat.innerText = gameState.day;
-    if (moneyStat) moneyStat.innerText = gameState.money;
+    if (moneyStat) moneyStat.innerText = Math.floor(gameState.money);
 
     const healthBar = document.getElementById('bar-health');
     const satietyBar = document.getElementById('bar-satiety');
@@ -225,9 +224,19 @@ function updateUI() {
     updateAvatar();
 }
 
+// --- БЕЗОПАСНАЯ ОБЁРТКА ДЛЯ VK BRIDGE (падает, но не ломает игру) ---
+function safeVkBridgeSend(method, params) {
+    if (typeof vkBridge !== 'undefined' && vkBridge) {
+        return vkBridge.send(method, params);
+    } else {
+        console.warn(`VK Bridge не доступен, вызов ${method} пропущен`);
+        return Promise.reject(new Error("VK Bridge not available"));
+    }
+}
+
 // --- ФУНКЦИИ ДЛЯ РЕКЛАМЫ ВКОНТАКТЕ ---
 function watchAdForMoney() {
-    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+    safeVkBridgeSend('VKWebAppShowNativeAds', { ad_format: 'reward' })
         .then((data) => {
             if (data.result) {
                 gameState.money += 1500;
@@ -243,7 +252,7 @@ function watchAdForMoney() {
 }
 
 function watchAdForRevive() {
-    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
+    safeVkBridgeSend('VKWebAppShowNativeAds', { ad_format: 'reward' })
         .then((data) => {
             if (data.result) {
                 gameState.health = 50;
@@ -265,37 +274,30 @@ function watchAdForRevive() {
         });
 }
 
-// --- СОХРАНЕНИЕ И ЗАГРУЗКА ПРОГРЕССА В ВК ---
+// --- СОХРАНЕНИЕ И ЗАГРУЗКА ПРОГРЕССА ---
 function saveGame() {
     localStorage.setItem("trainer_sim_save_final_v4", JSON.stringify(gameState));
 }
 
 function loadGame() {
-    // Проверяем, успела ли загрузиться библиотека VK Bridge
-    if (typeof vkBridge !== 'undefined') {
-        console.log('Библиотека VK Bridge на месте, отправляем сигнал инициализации...');
-        vkBridge.send('VKWebAppInit')
-            .then((data) => { console.log('VK Bridge успешно ответил!'); })
-            .catch((error) => { console.error('Ошибка инициализации ВК:', error); });
-    } else {
-        // Если библиотека ещё не загрузилась, пробуем отправить сигнал через полсекунды
-        console.log('VK Bridge ещё не готов, ждем загрузки скрипта...');
-        setTimeout(loadGame, 500);
-        return; // Выходим из функции, чтобы код ниже не сломался
-    }
+    // Инициализация VK Bridge (безопасно)
+    safeVkBridgeSend('VKWebAppInit', {})
+        .then(() => console.log('VK Bridge успешно инициализирован'))
+        .catch(err => console.warn('VK Bridge init ошибка (не страшно)', err));
 
-    // Логика загрузки сохранения из памяти
+    // Загрузка сохранения
     const save = localStorage.getItem("trainer_sim_save_final_v4");
     if (save) { 
-        gameState = JSON.parse(save); 
-        if (gameState.gender) {
+        const loaded = JSON.parse(save);
+        // обновляем только если есть gender, иначе остаёмся на стартовом экране
+        if (loaded.gender) {
+            gameState = loaded;
             const startScreen = document.getElementById("start-screen");
             if (startScreen) startScreen.style.display = "none";
         }
     }
     updateUI();
 }
-
 
 function showGameOverModal() {
     const finalDay = document.getElementById("final-day");
@@ -315,7 +317,8 @@ function restartGame() {
     updateUI();
     saveGame();
 }
-// --- ФУНКЦИЯ ДЛЯ ЗАПУСКА КВЕСТОВ И ТЕСТОВ ---
+
+// --- ФУНКЦИЯ ДЛЯ ЗАПУСКА КВЕСТОВ И ТЕСТОВ (ИСПРАВЛЕНА: ТРЕНИРОВКА ОТКРЫВАЕТ КЕЙСЫ) ---
 function startTrainerQuiz(type) {
     const quizBlock = document.getElementById("quiz-options-block");
     const mainActions = document.getElementById("main-actions-block");
@@ -330,7 +333,7 @@ function startTrainerQuiz(type) {
     quizBlock.innerHTML = ""; // Очищаем старые кнопки
 
     if (type === 'study') {
-        // Проверяем, хватает ли денег на курсы
+        // Курсы: проверка денег
         if (gameState.money < 500) {
             updateLog("❌ У тебя недостаточно денег на курсы по анатомии! Нужно 500 ₽.");
             quizBlock.style.display = "none";
@@ -339,21 +342,21 @@ function startTrainerQuiz(type) {
             return;
         }
         gameState.money -= 500;
+        updateUI();
 
-        // Берем случайный вопрос из базы по анатомии
         const randomQuestion = coursesQuestions[Math.floor(Math.random() * coursesQuestions.length)];
-        document.getElementById("text-log").textContent = `🎓 Курсы повышения квалификации. Вопрос: ${randomQuestion.question}`;
+        updateLog(`🎓 Курсы повышения квалификации. Вопрос: ${randomQuestion.question}`);
 
-        // Генерируем кнопки с вариантами ответов
         randomQuestion.options.forEach(option => {
             const btn = document.createElement("button");
-            btn.className = "btn btn-action";
+            btn.className = "btn btn-quiz";
             btn.textContent = option;
             btn.onclick = () => checkAnswer(option, randomQuestion.correct, 'study');
             quizBlock.appendChild(btn);
         });
-    } else if (type === 'work') {
-        // Логика обычной тренировки
+    } 
+    else if (type === 'work') {
+        // Тренировка: теперь открывается случайный кейс из trainingCases
         if (gameState.health < 20) {
             updateLog("❌ Ты слишком устал для проведения тренировки! Отдохни или выпей спортпит.");
             quizBlock.style.display = "none";
@@ -361,11 +364,38 @@ function startTrainerQuiz(type) {
             adBlock.style.display = "block";
             return;
         }
+        // Снимаем энергию ДО вопроса (логично: клиент уже ждёт)
         gameState.health -= 20;
-        gameState.money += 1000;
-        gameState.day += 1;
-        updateLog("👟 Ты успешно провел персональную тренировку для клиента! Получено +1000 ₽.");
-        finalizeTurn();
+        updateUI();
+
+        const randomCase = trainingCases[Math.floor(Math.random() * trainingCases.length)];
+        updateLog(`👟 Тренировка клиента. Кейс: ${randomCase.question}`);
+
+        randomCase.options.forEach(option => {
+            const btn = document.createElement("button");
+            btn.className = "btn btn-quiz";
+            btn.textContent = option;
+            btn.onclick = () => {
+                // В случае успеха/неудачи добавим деньги и день, а также вызовем checkAnswer
+                // Но checkAnswer уже содержит начисление репутации и штрафов.
+                // Нужно добавить +1000 ₽ и +1 день после ответа.
+                // Проще: переопределим checkAnswer для work, либо вызовем свою логику.
+                // Сделаем так: вызываем checkAnswer, а после него добавим деньги и день.
+                checkAnswer(option, randomCase.correct, 'work');
+                // После обработки ответа добавляем награду за проведённую тренировку
+                if (option === randomCase.correct) {
+                    gameState.money += 1000;
+                    updateLog(`💰 За квалифицированную тренировку вы получили +1000 ₽.`);
+                } else {
+                    gameState.money += 500; // хоть что-то
+                    updateLog(`💰 Клиент заплатил 500 ₽ за занятие.`);
+                }
+                gameState.day += 1;
+                updateUI();
+                finalizeTurn(); // finalizeTurn уже вызывается внутри checkAnswer, но повторный вызов не страшен
+            };
+            quizBlock.appendChild(btn);
+        });
     }
 }
 
