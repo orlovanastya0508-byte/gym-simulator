@@ -1,5 +1,13 @@
 // --- СОСТОЯНИЕ ИГРЫ ТРЕНЕРА ---
-vkBridge.send('VKWebAppInit');
+vkBridge.send('VKWebAppInit')
+  .then((data) => {
+    if (data.result) {
+      console.log('VK Bridge успешно запущен');
+    }
+  })
+  .catch((error) => {
+    console.error('Ошибка инициализации VK Bridge', error);
+  });
 
 let gameState = {
     day: 1,
