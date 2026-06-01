@@ -8,50 +8,19 @@ let gameState = {
     gender: null
 };
 
-// --- ФУНКЦИИ ДЛЯ РЕКЛАМЫ ВК (Вместо Яндекса) ---
-function watchAdForMoney() {
-    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
-        .then((data) => {
-            if (data.result) {
-                // Игрок досмотрел рекламу — начисляем деньги
-                gameState.money += 1500;
-                document.getElementById('stat-money').innerText = gameState.money;
-                updateLog("📺 Вы посмотрели рекламу и заработали 1500 ₽!");
-            }
-        })
-        .catch((error) => {
-            console.error("Ошибка показа рекламы:", error);
-            updateLog("❌ Не удалось загрузить рекламу. Попробуйте позже.");
-        });
-}
+const simpleTexts = {
+    eat: [
+        "Ты выпил протеиновый коктейль со вкусом банана. Мышцы растут!",
+        "Закупился BCAA и спортпитом. Энергия на высоте!",
+        "Съел правильный обед: куриная грудка и брокколи. Чистая масса!"
+    ],
+    rest: [
+        "Ты ушел со смены пораньше и хорошенько выспался. Силы восстановлены!",
+        "Сходил на спортивный массаж. Мышцы расслабились, готов к новым рекордам.",
+        "Провел день без тренировок. Отдых — важная часть прогресса!"
+    ]
+};
 
-function watchAdForRevive() {
-    vkBridge.send('VKWebAppShowNativeAds', { ad_format: 'reward' })
-        .then((data) => {
-            if (data.result) {
-                // Игрок досмотрел рекламу для восстановления
-                gameState.health = 50;
-                gameState.satiety = 50;
-                gameState.mood = 50;
-                
-                // Закрываем модальное окно проигрыша
-                document.getElementById('game-over-modal').style.display = 'none';
-                
-                // Обновляем полоски на экране (вызовите вашу функцию обновления интерфейса, если она есть)
-                updateUI(); 
-                updateLog("❤️ Вы восстановили силы за рекламу и возвращаетесь в игру!");
-            }
-        })
-        .catch((error) => {
-            console.error("Ошибка показа рекламы:", error);
-        });
-}
-
-// Вспомогательная функция для вывода текста (замените на свою, если у вас она называется иначе)
-function updateLog(text) {
-    const log = document.getElementById('text-log');
-    if (log) log.innerText = text;
-}
 // --- БАЗА ВОПРОСОВ ПО АНАТОМИИ (КУРСЫ) ---
 const coursesQuestions = [
     {
@@ -143,23 +112,9 @@ const trainingCases = [
     }
 ];
 
-const simpleTexts = {
-    eat: [
-        "Ты выпил протеиновый коктейль со вкусом банана. Мышцы растут!",
-        "Закупился BCAA и спортпитом. Энергия на высоте!",
-        "Съел правильный обед: куриная грудка и брокколи. Чистая масса!"
-    ],
-    rest: [
-        "Ты ушел со смены пораньше и хорошенько выспался. Силы восстановлены!",
-        "Сходил на спортивный массаж. Мышцы расслабились, готов к новым рекордам.",
-        "Провел день без тренировок. Отдых — важная часть прогресса!"
-    ]
-};
-
 // --- АВТОМАТИЧЕСКИЙ ЗАПУСК ИГРЫ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
 window.onload = function() {
     console.log("Запуск игры в окружении ВКонтакте...");
-    // Игра сразу пытается загрузить сохранение из памяти браузера
     loadGame();
 };
 
@@ -226,12 +181,42 @@ function finalizeTurn() {
     if (gameState.satiety > 100) gameState.satiety = 100;
     if (gameState.mood > 100) gameState.mood = 100;
 
-    if (gameState.health < 0) gameState.health = 0;
-    if (gameState.satiety < 0) gameState.satiety = 0;
-    if (gameState.mood < 0) gameState.mood = 0;
+    if (gameState.health <= 0 || gameState.satiety <= 0 || gameState.mood <= 0) {
+        if (gameState.health < 0) gameState.health = 0;
+        if (gameState.satiety < 0) gameState.satiety = 0;
+        if (gameState.mood < 0) gameState.mood = 0;
+        updateUI();
+        showGameOverModal();
+        return;
+    }
 
     updateUI();
     saveGame();
+}
+
+// --- ОБНОВЛЕНИЕ ИНТЕРФЕЙСА НА ЭКРАНЕ ---
+function updateUI() {
+    const healthVal = document.getElementById('val-health');
+    const satietyVal = document.getElementById('val-satiety');
+    const moodVal = document.getElementById('val-mood');
+    const dayStat = document.getElementById('stat-day');
+    const moneyStat = document.getElementById('stat-money');
+
+    if (healthVal) healthVal.innerText = gameState.health;
+    if (satietyVal) satietyVal.innerText = gameState.satiety;
+    if (moodVal) moodVal.innerText = gameState.mood;
+    if (dayStat) dayStat.innerText = gameState.day;
+    if (moneyStat) moneyStat.innerText = gameState.money;
+
+    const healthBar = document.getElementById('bar-health');
+    const satietyBar = document.getElementById('bar-satiety');
+    const moodBar = document.getElementById('bar-mood');
+
+    if (healthBar) healthBar.style.width = gameState.health + '%';
+    if (satietyBar) satietyBar.style.width = gameState.satiety + '%';
+    if (moodBar) moodBar.style.width = gameState.mood + '%';
+
+    updateAvatar();
 }
 
 // --- ФУНКЦИИ ДЛЯ РЕКЛАМЫ ВКОНТАКТЕ ---
@@ -240,7 +225,7 @@ function watchAdForMoney() {
         .then((data) => {
             if (data.result) {
                 gameState.money += 1500;
-                document.getElementById('stat-money').innerText = gameState.money;
+                updateUI();
                 updateLog("📺 Вы посмотрели рекламу и заработали 1500 ₽!");
                 saveGame();
             }
@@ -265,7 +250,6 @@ function watchAdForRevive() {
         })
         .catch((error) => {
             console.error('Ошибка рекламы в ВК:', error);
-            // Бесплатное тестовое воскрешение на случай сбоя сети рекламы
             gameState.health = 50;
             gameState.satiety = 50;
             gameState.mood = 50;
@@ -284,7 +268,6 @@ function loadGame() {
     const save = localStorage.getItem("trainer_sim_save_final_v4");
     if (save) { 
         gameState = JSON.parse(save); 
-        // Если игра уже начата и персонаж выбран, скрываем стартовый экран
         if (gameState.gender) {
             const startScreen = document.getElementById("start-screen");
             if (startScreen) startScreen.style.display = "none";
@@ -306,7 +289,7 @@ function restartGame() {
     const startScreen = document.getElementById("start-screen");
     
     if (modal) modal.style.display = "none";
-    if (startScreen) startScreen.style.display = "flex"; // Показываем выбор тренера заново
+    if (startScreen) startScreen.style.display = "flex"; 
     
     updateUI();
     saveGame();
