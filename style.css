@@ -225,3 +225,29 @@ html, body {
     .avatar-container { height: 140px; align-items: center; }
     .btn { padding: 10px; font-size: 0.75rem; }
 }
+/* КНОПКА ВКЛЮЧЕНИЯ МУЗЫКИ */
+.music-toggle {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 215, 0, 0.6);
+    color: gold;
+    font-size: 24px;
+    cursor: pointer;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: 0.2s;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+.music-toggle:hover {
+    transform: scale(1.05);
+    background-color: rgba(0, 0, 0, 0.8);
+    border-color: gold;
+}
