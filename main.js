@@ -113,10 +113,16 @@ const trainingCases = [
 ];
 
 // --- АВТОМАТИЧЕСКИЙ ЗАПУСК ИГРЫ ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ---
-window.onload = function() {
-    console.log("Запуск игры в окружении ВКонтакте...");
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Запуск игры после полной сборки страницы...");
+        loadGame();
+    });
+} else {
+    console.log("Страница уже готова, запускаем игру...");
     loadGame();
-};
+}
+
 
 // --- ВЫБОР ТРЕНЕРА ---
 function selectGender(gender) {
