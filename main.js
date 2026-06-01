@@ -1,4 +1,43 @@
-// --- СОСТОЯНИЕ ИГРЫ ТРЕНЕРА ---
+// ========== МУЗЫКА И КНОПКА (УЛУЧШЕННАЯ) ==========
+document.addEventListener('DOMContentLoaded', () => {
+    const btn = document.getElementById('musicToggleBtn');
+    const audio = document.getElementById('bgMusic') || new Audio('bg-music.mp3');
+    
+    if (!audio.loop) audio.loop = true;
+    if (!audio.volume) audio.volume = 0.3;
+    
+    let musicOn = localStorage.getItem('music_enabled') !== 'false'; // по умолчанию вкл
+    
+    function updateButton() {
+        if (!btn) return;
+        btn.textContent = musicOn ? '🔊' : '🔇';
+        if (musicOn) {
+            audio.play().catch(e => console.log('Автовоспроизведение заблокировано, кликни по странице'));
+        } else {
+            audio.pause();
+        }
+    }
+    
+    if (btn) {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            musicOn = !musicOn;
+            localStorage.setItem('music_enabled', musicOn);
+            updateButton();
+        });
+    }
+    
+    // Первый клик по странице – включаем музыку (обходим блокировку)
+    const startMusicOnInteraction = () => {
+        if (musicOn) audio.play().catch(e => console.warn(e));
+        document.removeEventListener('click', startMusicOnInteraction);
+        document.removeEventListener('touchstart', startMusicOnInteraction);
+    };
+    document.addEventListener('click', startMusicOnInteraction);
+    document.addEventListener('touchstart', startMusicOnInteraction);
+    
+    updateButton();
+});// --- СОСТОЯНИЕ ИГРЫ ТРЕНЕРА ---
 let gameState = {
     day: 1,
     money: 500,
