@@ -12,7 +12,12 @@ html, body {
     justify-content: center;
     align-items: center;
 }
-
+* {
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+}
 /* СТАРТОВЫЙ ЭКРАН */
 .start-screen {
     position: fixed;
