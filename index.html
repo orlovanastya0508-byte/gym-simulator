@@ -5,18 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Симулятор тренера — VK Mini App</title>
     <link rel="stylesheet" href="style.css">
+    <!-- VK Bridge -->
     <script src="https://unpkg.com/@vkontakte/vk-bridge@latest/dist/browser.min.js"></script>
 </head>
 <body>
 
 <!-- КНОПКА ВКЛЮЧЕНИЯ МУЗЫКИ (плавающая) -->
 <button id="musicToggleBtn" class="music-toggle" title="Включить/выключить музыку">🔇</button>
-
-<!-- АУДИО ЭЛЕМЕНТ (фоновая музыка) -->
-<audio id="bgMusic" loop preload="auto">
-    <source src="bg-music.mp3" type="audio/mpeg">
-    <!-- Если файла нет, ничего страшного -->
-</audio>
 
 <!-- СТАРТОВЫЙ ЭКРАН ВЫБОРА ПОЛА -->
 <div class="start-screen" id="start-screen">
@@ -84,6 +79,7 @@
     </section>
 </div>
 
+<!-- МОДАЛЬНОЕ ОКНО ПРОИГРЫША -->
 <div class="modal" id="game-over-modal">
     <div class="modal-content">
         <h2>💀 Вы выгорели!</h2>
@@ -94,6 +90,7 @@
     </div>
 </div>
 
+<!-- Подключаем основной скрипт -->
 <script src="main.js"></script>
 </body>
 </html>
